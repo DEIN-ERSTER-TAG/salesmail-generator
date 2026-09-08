@@ -3,17 +3,21 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
+// Neue Bedrock-API-Keys (AWS_BEARER_TOKEN_BEDROCK) haben Vorrang - dann
+// erkennt der SDK-Default-Provider sie automatisch. Fallback auf das alte
+// Access-Key/Secret-Paar, falls kein Bearer-Token gesetzt ist.
 const client = new BedrockRuntimeClient({
-  region: process.env.AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
+  region: process.env.AWS_REGION || "eu-central-1",
+  ...(process.env.AWS_BEARER_TOKEN_BEDROCK ? {} : {
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
+  }),
 });
 
 const MODEL_ID =
-  process.env.BEDROCK_MODEL_ID ||
-  "anthropic.claude-3-5-haiku-20241022-v1:0";
+  process.env.BEDROCK_MODEL_ID || "eu.anthropic.claude-sonnet-4-6";
 
 export async function adjustEmail(
   currentEmail: string,
