@@ -134,7 +134,7 @@ function buildBerufsmediumSection(formate: FormatData[], p: P): string {
         `${bullet}Mit einem **Augmented-Reality-Avatar** lassen wir aus einer GameCard in ${p.IhremEurem} CI und ${p.IhrerEurer} Arbeitskleidung ein 3D-Avatar ${p.IhrerEurer} Azubis „auferstehen" – Schüler*innen können mit diesem Avatar interagieren: in der Schule, auf Messen oder zu Hause, denn die GameCard funktioniert zugleich als Visitenkarte.`
       );
       lines.push(
-        `--> Den allerersten Prototyp gibt es [hier](https://www.youtube.com/shorts/uXLoTjtRp1M) zu sehen (Hinweis: Der Prototyp befindet sich noch in der Konzeptionsphase und wird in den nächsten Wochen weiterentwickelt.)`
+        `--> Den allerersten Prototyp gibt es [hier](https://youtube.com/shorts/qoy8ReZhoMY) zu sehen (Hinweis: Der Prototyp befindet sich noch in der Konzeptionsphase und wird in den nächsten Wochen weiterentwickelt.)`
       );
       lines.push("");
     }
