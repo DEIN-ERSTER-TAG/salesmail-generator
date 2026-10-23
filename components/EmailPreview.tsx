@@ -16,6 +16,9 @@ const BOLD_HEADERS = new Set([
   "Unsere Schulvermarktung",
   "Nutzungsrechte",
   "Kosten (netto)",
+  "Ihre Präsentation",
+  "Deine Präsentation",
+  "Eure Präsentation",
 ]);
 
 const BOLD_ITALIC_NAMES = new Set([

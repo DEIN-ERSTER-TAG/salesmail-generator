@@ -269,15 +269,31 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   const hasFormate = data.formate.length > 0;
   const lines: string[] = [];
 
+  // Einstieg + Präsentations-Block: Sie / du / ihr (Plural, sobald mehr als eine Person eingetragen ist)
+  const ein = data.anredeSiezen
+    ? { interesse: "Ihr", dativ: "Ihnen", praesi: "Ihre Präsentation", finden: "finden Sie" }
+    : mehrzahl
+      ? { interesse: "euer", dativ: "euch", praesi: "Eure Präsentation", finden: "findet ihr" }
+      : { interesse: "dein", dativ: "dir", praesi: "Deine Präsentation", finden: "findest du" };
+
   if (anrede) lines.push(anrede);
   lines.push("");
   lines.push(
-    `vielen Dank für ${p.IhrEuer} Interesse an DEIN ERSTER TAG – dem größten Schulprogramm für Berufsorientierung in Deutschland.`
+    `vielen Dank für ${ein.interesse} Interesse an DEIN ERSTER TAG – dem größten Schulprogramm für Berufsorientierung in Deutschland.`
   );
-  lines.push("");
   lines.push(
-    `Ich freue mich sehr, ${p.IhnenDir} im Folgenden weitere Informationen zu unseren Angeboten zukommen zu lassen:`
+    `Ich freue mich sehr, ${ein.dativ} im Folgenden weitere Informationen zu unseren Angeboten zukommen zu lassen:`
   );
+
+  if (data.praesentation) {
+    lines.push("");
+    lines.push(ein.praesi);
+    lines.push("");
+    lines.push(`Die Präsentation unseres heutigen Termins ${ein.finden} hier:`);
+    lines.push("");
+    lines.push(`[${data.praesentation.url}](${data.praesentation.url})`);
+    lines.push(`Passwort: ${data.praesentation.password}`);
+  }
 
   if (hasFormate) {
     lines.push("");

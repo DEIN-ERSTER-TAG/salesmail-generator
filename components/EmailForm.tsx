@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   FormData,
   FormatData,
@@ -12,7 +13,10 @@ import {
   PARTNERSCHULEN_MODUS_LABELS,
   BUNDESLAENDER,
   Bundesland,
+  PraesentationEntry,
+  BeispielMedium,
 } from "@/lib/types";
+import SearchCombo, { ComboOption } from "@/components/SearchCombo";
 
 
 const FORMAT_OPTIONS: FormatType[] = ["sprachnachricht", "ar-avatar", "kurzerklart", "360grad"];
@@ -45,6 +49,85 @@ export default function EmailForm({ data, onChange }: Props) {
     onChange({ ...data, [key]: value });
   }
 
+  // Präsentationen (aus dem Präsentations-Generator, gemeinsamer Redis-Store)
+  const [praesentationen, setPraesentationen] = useState<PraesentationEntry[]>([]);
+  const [praesentationenLoading, setPraesentationenLoading] = useState(true);
+  const [praesentationenError, setPraesentationenError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/presentations")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.error) setPraesentationenError(json.error);
+        else setPraesentationen(json.items || []);
+      })
+      .catch(() => setPraesentationenError("Präsentationen konnten nicht geladen werden."))
+      .finally(() => setPraesentationenLoading(false));
+  }, []);
+
+  // Pro Firma sortiert, bei gleicher Firma neueste zuerst
+  const praesentationOptions: ComboOption[] = [...praesentationen]
+    .sort(
+      (x, y) =>
+        (x.companyName || "").localeCompare(y.companyName || "", "de") ||
+        new Date(y.createdAt || 0).getTime() - new Date(x.createdAt || 0).getTime()
+    )
+    .map((p) => ({
+      id: p.id,
+      label: `${p.companyName || "–"} (${formatDate(p.createdAt)})`,
+      search: (p.companyName || "").toLowerCase(),
+    }));
+
+  function selectPraesentation(id: string | null) {
+    set("praesentation", praesentationen.find((p) => p.id === id) || null);
+  }
+
+  // Beispielmedien #kurzerklärt / 360-Grad (live von deinerstertag.de, je Format einmal geladen)
+  const [beispiele, setBeispiele] = useState<Partial<Record<FormatType, BeispielMedium[]>>>({});
+  const [beispieleError, setBeispieleError] = useState<Partial<Record<FormatType, string>>>({});
+  const beispielFormate = data.formate.map((f) => f.type).filter((t) => t === "kurzerklart" || t === "360grad");
+
+  useEffect(() => {
+    beispielFormate.forEach((type) => {
+      if (beispiele[type] || beispieleError[type]) return;
+      fetch(`/api/beispiele?format=${type}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.error) setBeispieleError((prev) => ({ ...prev, [type]: json.error }));
+          else setBeispiele((prev) => ({ ...prev, [type]: json.items || [] }));
+        })
+        .catch(() =>
+          setBeispieleError((prev) => ({ ...prev, [type]: "Beispielmedien konnten nicht geladen werden." }))
+        );
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beispielFormate.join(",")]);
+
+  function beispielOptions(type: FormatType): ComboOption[] {
+    return (beispiele[type] || []).map((b) => ({
+      id: b.id,
+      label: `${b.beruf} (${b.unternehmen}${b.ort ? ", " + b.ort : ""})`,
+      search: `${b.beruf} ${b.unternehmen} ${b.ort}`.toLowerCase(),
+    }));
+  }
+
+  function selectBeispiel(type: FormatType, id: string | null) {
+    const b = (beispiele[type] || []).find((x) => x.id === id) || null;
+    set(
+      "formate",
+      data.formate.map((f) =>
+        f.type === type
+          ? {
+              ...f,
+              beispielId: b ? b.id : "",
+              beispielTitel: b ? `${b.beruf} (${b.unternehmen})` : "",
+              beispielLink: b ? b.url : "",
+            }
+          : f
+      )
+    );
+  }
+
   // Personen
   function addPerson() {
     if (data.personen.length >= 5) return;
@@ -71,7 +154,7 @@ export default function EmailForm({ data, onChange }: Props) {
     if (exists) {
       set("formate", data.formate.filter((f) => f.type !== type));
     } else {
-      const newFormat: FormatData = { type, beispielTitel: "", beispielLink: "" };
+      const newFormat: FormatData = { type, beispielTitel: "", beispielLink: "", beispielId: "" };
       const ordered = FORMAT_OPTIONS.map(
         (t) => data.formate.find((f) => f.type === t) || (t === type ? newFormat : null)
       ).filter(Boolean) as FormatData[];
@@ -89,9 +172,31 @@ export default function EmailForm({ data, onChange }: Props) {
   return (
     <div className="h-full overflow-y-auto p-4">
 
-      {/* Sektion 1: Ansprache */}
+      {/* Sektion 1: Präsentation */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={1} label="Ansprache" />
+        <SectionHeader num={1} label="Präsentation" />
+        <Field label="Präsentation zum Termin (Unternehmen suchen)">
+          <SearchCombo
+            options={praesentationOptions}
+            value={data.praesentation?.id ?? null}
+            onSelect={selectPraesentation}
+            placeholder="Unternehmen suchen…"
+            loading={praesentationenLoading}
+            error={praesentationenError}
+          />
+        </Field>
+        {data.praesentation ? (
+          <p className="text-xs text-gray-500">
+            Link + Passwort werden unter „Ihre Präsentation“ in die Mail eingefügt.
+          </p>
+        ) : (
+          <p className="text-xs text-gray-400 italic">Ohne Auswahl enthält die Mail keinen Präsentations-Block.</p>
+        )}
+      </div>
+
+      {/* Sektion 2: Ansprache */}
+      <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
+        <SectionHeader num={2} label="Ansprache" />
 
         <Field label="Anrede">
           <div className="flex gap-2">
@@ -172,9 +277,9 @@ export default function EmailForm({ data, onChange }: Props) {
         )}
       </div>
 
-      {/* Sektion 2: Formate */}
+      {/* Sektion 3: Formate */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={2} label="Formate" />
+        <SectionHeader num={3} label="Formate" />
 
         <div className="flex flex-wrap gap-2 mb-3">
           {FORMAT_OPTIONS.map((type) => {
@@ -204,6 +309,19 @@ export default function EmailForm({ data, onChange }: Props) {
 
             {format.type !== "sprachnachricht" && format.type !== "ar-avatar" && (
               <>
+                <Field label="Beispielmedium von deinerstertag.de auswählen">
+                  <SearchCombo
+                    options={beispielOptions(format.type)}
+                    value={format.beispielId || null}
+                    onSelect={(id) => selectBeispiel(format.type, id)}
+                    placeholder="Berufsbezeichnung suchen…"
+                    loading={!beispiele[format.type] && !beispieleError[format.type]}
+                    error={beispieleError[format.type] || null}
+                  />
+                  <p className="mt-2 text-xs rounded px-2 py-1.5 bg-[#fff8c2] text-[#6b5a00]">
+                    Bitte Link auf Aktualität prüfen
+                  </p>
+                </Field>
                 <Field label="Beispielmedium – Berufsbezeichnung / Titel">
                   <input
                     type="text"
@@ -230,9 +348,9 @@ export default function EmailForm({ data, onChange }: Props) {
         )}
       </div>
 
-      {/* Sektion 3: Schulvermarktung */}
+      {/* Sektion 4: Schulvermarktung */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={3} label="Schulvermarktung" />
+        <SectionHeader num={4} label="Schulvermarktung" />
 
         <Field label="Gebiet">
           <div className="space-y-1.5 mt-1">
@@ -251,9 +369,9 @@ export default function EmailForm({ data, onChange }: Props) {
         </Field>
       </div>
 
-      {/* Sektion 4: Partnerschulen */}
+      {/* Sektion 5: Partnerschulen */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={4} label="Partnerschulen" />
+        <SectionHeader num={5} label="Partnerschulen" />
 
         <div className="space-y-1.5 mb-3">
           {(Object.keys(PARTNERSCHULEN_MODUS_LABELS) as PartnerschulenModus[]).map((modus) => (
@@ -321,9 +439,9 @@ export default function EmailForm({ data, onChange }: Props) {
         )}
       </div>
 
-      {/* Sektion 5: Zusätze */}
+      {/* Sektion 6: Zusätze */}
       <div className="bg-white rounded-lg p-4 mb-3 shadow-sm">
-        <SectionHeader num={5} label="Zusätze" />
+        <SectionHeader num={6} label="Zusätze" />
 
         <div className="mb-3">
           <label className="flex items-center gap-2 cursor-pointer" style={{ marginBottom: 0 }}>
@@ -396,4 +514,10 @@ export default function EmailForm({ data, onChange }: Props) {
 
     </div>
   );
+}
+
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }

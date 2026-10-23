@@ -91,10 +91,30 @@ export interface Person {
   geschlecht: "maennlich" | "weiblich";
 }
 
+// Live veröffentlichte Präsentation aus dem Präsentations-Generator
+// (kommt aus dem gemeinsamen Redis-Store, Key "praesentationen").
+export interface PraesentationEntry {
+  id: string;
+  companyName: string;
+  url: string;
+  password: string;
+  createdAt: string;
+}
+
+// Beispielmedium (#kurzerklärt / 360-Grad) aus der Angebotssuche auf deinerstertag.de
+export interface BeispielMedium {
+  id: string;
+  beruf: string;
+  unternehmen: string;
+  ort: string;
+  url: string;
+}
+
 export interface FormatData {
   type: FormatType;
   beispielTitel: string;
   beispielLink: string;
+  beispielId: string; // gewähltes Angebot aus der deinerstertag.de-Liste ("" = manuell/keins)
 }
 
 export interface FormData {
@@ -120,6 +140,8 @@ export interface FormData {
   nachhakenZeitraum: string;
 
   unterschrift: Unterschrift;
+
+  praesentation: PraesentationEntry | null; // null = kein Präsentations-Block in der Mail
 }
 
 export const DEFAULT_FORM: FormData = {
@@ -127,7 +149,7 @@ export const DEFAULT_FORM: FormData = {
   personen: [{ vorname: "", nachname: "", geschlecht: "weiblich" }],
 
   formate: [
-    { type: "sprachnachricht", beispielTitel: "", beispielLink: "" },
+    { type: "sprachnachricht", beispielTitel: "", beispielLink: "", beispielId: "" },
   ],
 
   svGebiet: "regional",
@@ -147,4 +169,6 @@ export const DEFAULT_FORM: FormData = {
   nachhakenZeitraum: "",
 
   unterschrift: "Robert Greve",
+
+  praesentation: null,
 };
