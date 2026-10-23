@@ -13,6 +13,7 @@ interface Props {
 const BOLD_HEADERS = new Set([
   "Ihr Berufsmedium",
   "Euer Berufsmedium",
+  "Dein Berufsmedium",
   "Unsere Schulvermarktung",
   "Nutzungsrechte",
   "Kosten (netto)",

@@ -45,6 +45,25 @@ function pron(siezen: boolean, mehrzahl = false): P {
       gebtBescheid: "geben Sie mir",
     };
   }
+  // Duzen, eine Person: dein/deine …
+  if (!mehrzahl) {
+    return {
+      IhrEuer: "dein",
+      IhnenDir: "dir",
+      SieIhr: "du",
+      IhreEure: "deine",
+      IhrerEurer: "deiner",
+      IhremEurem: "deinem",
+      IhrenEuren: "deinen",
+      erhaltenErhaltet: "erhältst",
+      gebenGebt: "gibst",
+      findenFindet: "findest du",
+      sendeZu: "sende ich dir",
+      ueberzeugtSelbst: "Überzeug dich",
+      gebtBescheid: "gib mir",
+    };
+  }
+  // Duzen, mehrere Personen
   return {
     IhrEuer: "Euer",
     IhnenDir: mehrzahl ? "euch" : "dir",
@@ -60,6 +79,10 @@ function pron(siezen: boolean, mehrzahl = false): P {
     ueberzeugtSelbst: mehrzahl ? "Überzeugt euch" : "Überzeug dich",
     gebtBescheid: mehrzahl ? "gebt mir" : "gib mir",
   };
+}
+
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function buildAnrede(personen: Person[], siezen: boolean): string {
@@ -93,7 +116,7 @@ function formatPreis(n: number): string {
 function buildBerufsmediumSection(formate: FormatData[], p: P): string {
   const bullet = formate.length > 1 ? "▪ " : "";
   const lines: string[] = [];
-  lines.push(`${p.IhrEuer} Berufsmedium`);
+  lines.push(`${cap(p.IhrEuer)} Berufsmedium`);
   lines.push("");
 
   formate.forEach((f) => {
@@ -158,7 +181,7 @@ function buildSVSection(gebiet: SvGebiet, p: P, partnerschulenText: string): str
   lines.push("Unsere Schulvermarktung");
   lines.push("");
   lines.push(
-    `${p.IhreEure} Medien erreichen Schulen ${phrase} über drei zentrale Wege: unsere kostenfrei ausleihbare Medienbox (${medienboxLink}), unsere Videostunde (${videostundeLink}) mit praxisnahen Berufseinblicken direkt im Klassenzimmer sowie die Berufsberatung der Arbeitsagenturen. Mehr als die Hälfte aller deutschen Arbeitsagenturen nutzt unsere Formate bereits an Schulen und auf Messen.`
+    `${cap(p.IhreEure)} Medien erreichen Schulen ${phrase} über drei zentrale Wege: unsere kostenfrei ausleihbare Medienbox (${medienboxLink}), unsere Videostunde (${videostundeLink}) mit praxisnahen Berufseinblicken direkt im Klassenzimmer sowie die Berufsberatung der Arbeitsagenturen. Mehr als die Hälfte aller deutschen Arbeitsagenturen nutzt unsere Formate bereits an Schulen und auf Messen.`
   );
   lines.push("");
   lines.push(
@@ -318,7 +341,7 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
 
   if (data.anhang) {
     lines.push("");
-    lines.push(`Anbei erhalten ${p.SieIhr} auch die formellen Angebote zu den o.g. Leistungen.`);
+    lines.push(`Anbei ${p.erhaltenErhaltet} ${p.SieIhr} auch die formellen Angebote zu den o.g. Leistungen.`);
   }
 
   if (data.abschluss === "followup" && (data.followUpDatum || data.followUpUhrzeit)) {
