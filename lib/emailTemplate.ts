@@ -380,17 +380,9 @@ export function generateEmail(data: FormData): { betreff: string; text: string }
   }
 
   lines.push("");
-  if (data.unterschrift === "Ann-Kathrin Fees") {
-    if (data.anredeSiezen) {
-      lines.push("Herzliche Grüße, Anna Fees");
-    } else {
-      lines.push("Herzliche Grüße, Anna");
-    }
-  } else {
-    lines.push("Mit besten Grüßen");
-    lines.push("");
-    lines.push(data.anredeSiezen ? data.unterschrift : data.unterschrift.split(" ")[0]);
-  }
+  lines.push("Mit besten Grüßen");
+  lines.push("");
+  lines.push(data.anredeSiezen ? data.unterschrift : data.unterschrift.split(" ")[0]);
 
   return {
     betreff: "Ihr Angebot von DEIN ERSTER TAG",

@@ -71,7 +71,6 @@ export const UNTERSCHRIFTEN = [
   "Franziska Miodek",
   "Ferdinand Sieglin",
   "Marie Hemmis",
-  "Ann-Kathrin Fees",
   "Robert Greve",
 ] as const;
 
@@ -81,7 +80,6 @@ export const CALENDLY_LINKS: Record<Unterschrift, string> = {
   "Franziska Miodek": "https://calendly.com/franziska-miodek-deinerstertag/30min",
   "Ferdinand Sieglin": "https://calendly.com/ferdinand-sieglin/30min?back=1",
   "Marie Hemmis": "https://calendly.com/marie-hemmis/dein-erster-tag-follow-up?back=1",
-  "Ann-Kathrin Fees": "https://calendly.com/ann-kathrin-fees/dein-erster-tag-follow-up-30-min",
   "Robert Greve": "https://calendly.com/robert-greve/termin-mit-robert?back=1",
 };
 
